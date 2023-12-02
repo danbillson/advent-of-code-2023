@@ -16,8 +16,8 @@ const numbers = {
   nine: "9",
 } as const;
 
-console.log(part1());
-console.log(part2());
+console.log("Part 1:", part1());
+console.log("Part 2:", part2());
 
 function findFirst(arr: string[], cond: (str: string) => boolean) {
   for (let char of arr) {
