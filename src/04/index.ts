@@ -21,34 +21,33 @@ function score(matches: number) {
   return score;
 }
 
-function part1() {
-  return lines.reduce((acc, cur) => {
-    const [, numbers] = cur.split(":");
+function findMatches(lines: Line[]) {
+  return lines.map((line) => {
+    const [, numbers] = line.split(":");
     const [winning, yours] = numbers
       .split("|")
       .map((x) => x.trim().split(" ").filter(Boolean));
 
-    const matches = yours.filter((x) => winning.includes(x));
+    return yours.filter((x) => winning.includes(x));
+  });
+}
 
-    return acc + score(matches.length);
-  }, 0);
+function part1() {
+  const matches = findMatches(lines);
+
+  return matches.reduce((acc, cur) => acc + score(cur.length), 0);
 }
 
 function part2() {
-  const matches = lines.reduce((acc, cur) => {
-    const [, numbers] = cur.split(":");
-    const [winning, yours] = numbers
-      .split("|")
-      .map((x) => x.trim().split(" ").filter(Boolean));
-
-    const matches = yours.filter((x) => winning.includes(x));
-
-    return [...acc, matches.length];
-  }, [] as number[]);
+  const matches = findMatches(lines);
+  const matchesCount = matches.reduce(
+    (acc, cur) => [...acc, cur.length],
+    [] as number[]
+  );
 
   const copies = Array.from({ length: matches.length }, () => 1);
   for (let i = 0; i < copies.length; i++) {
-    for (let j = 1; j <= matches[i]; j++) {
+    for (let j = 1; j <= matchesCount[i]; j++) {
       for (let k = 0; k < copies[i]; k++) {
         copies[i + j] += 1;
       }
