@@ -21,27 +21,30 @@ function part1() {
     .split(":")
     .map((x) => x.trim().split(" ").map(Number));
 
-  let maps = [] as Record<number, number>[];
+  let maps = [] as [number, number, number][][];
   for (let i = 0; i < rest.length; i++) {
     if (!rest[i]) continue;
 
     if (rest[i].includes("map")) {
-      maps.push({});
+      maps.push([]);
+      continue;
     }
 
     const [destination, source, length] = rest[i].split(" ").map(Number);
-    for (let j = 0; j < length; j++) {
-      maps[maps.length - 1][source + j] = destination + j;
-    }
+    maps[maps.length - 1].push([destination, source, length]);
   }
 
   const locations = seeds.map((seed) => {
-    return maps.reduce((acc, cur) => {
-      if (cur[acc]) {
-        return cur[acc];
+    return maps.reduce((location, map) => {
+      let newLocation = location;
+      for (let i = 0; i < map.length; i++) {
+        const [destination, source, length] = map[i];
+        if (newLocation >= source && newLocation < source + length) {
+          newLocation = destination + (newLocation - source);
+          break;
+        }
       }
-
-      return acc;
+      return newLocation;
     }, seed);
   });
 
