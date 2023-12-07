@@ -1,3 +1,4 @@
+// The change to part 2 was just wild enough to create a new file
 const path = "src/07/data.txt";
 const file = Bun.file(path);
 
@@ -10,20 +11,33 @@ type Cards = [Card, Card, Card, Card, Card];
 type Hand = { cards: Cards; bid: number };
 
 function getCardDistribution(cards: Cards) {
-  return cards.reduce(
-    (acc, card) => ({
-      ...acc,
-      [card]: (acc[card] || 0) + 1,
-    }),
-    {} as Record<string, number>
-  );
+  const jokerCount = cards.filter((card) => card === "J").length;
+  const cardsWithoutJoker = cards
+    .filter((card) => card !== "J")
+    .reduce(
+      (acc, card) => ({
+        ...acc,
+        [card]: (acc[card] || 0) + 1,
+      }),
+      {} as Record<Card, number>
+    );
+
+  if (jokerCount === 5) return { J: 5 };
+
+  const [bestCard] = Object.entries(cardsWithoutJoker).sort(
+    (a, b) => b[1] - a[1]
+  )[0] as [Card, number];
+
+  return {
+    ...cardsWithoutJoker,
+    [bestCard]: cardsWithoutJoker[bestCard] + jokerCount,
+  };
 }
 
 const cardValues = {
   A: 14,
   K: 13,
   Q: 12,
-  J: 11,
   T: 10,
   "9": 9,
   "8": 8,
@@ -33,6 +47,7 @@ const cardValues = {
   "4": 4,
   "3": 3,
   "2": 2,
+  J: 1,
 };
 
 function highCard(a: Cards, b: Cards) {
