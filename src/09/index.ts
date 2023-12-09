@@ -39,5 +39,17 @@ function part1() {
   return nextInSequence.reduce((acc, cur) => acc + cur, 0);
 }
 
+function part2() {
+  const diffTree = sequences.map(buildDiffTree);
+
+  const prevInSequence = diffTree.map((tree) => {
+    return tree.reduceRight((acc, cur) => {
+      return diff(acc, cur[0]);
+    }, 0);
+  });
+
+  return prevInSequence.reduce((acc, cur) => acc + cur, 0);
+}
+
 console.log("Part 1:", part1());
-// console.log("Part 2:", part2());
+console.log("Part 2:", part2());
