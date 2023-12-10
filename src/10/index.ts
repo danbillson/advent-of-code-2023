@@ -4,6 +4,17 @@ const file = Bun.file(path);
 const data = await file.text();
 const lines = data.split("\n");
 
+function findStart(grid: string[][]): [number, number] {
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = 0; j < lines[i].length; j++) {
+      if (lines[i][j] === "S") {
+        return [i, j];
+      }
+    }
+  }
+  return [-1, -1];
+}
+
 // Each pipe should have exactly 2 adjacent pipes
 function getAdjacentPipes(grid: string[][], [x, y]: [number, number]) {
   const currentPipe = grid[x][y];
@@ -47,15 +58,7 @@ function nextCoord(
 
 function part1() {
   const grid = lines.map((line) => line.split(""));
-
-  let start: [number, number] = [0, 0];
-  for (let i = 0; i < lines.length; i++) {
-    for (let j = 0; j < lines[i].length; j++) {
-      if (lines[i][j] === "S") {
-        start = [i, j];
-      }
-    }
-  }
+  const start = findStart(grid);
 
   let count = 0;
   let visited = [start.join(",")];
@@ -72,5 +75,49 @@ function part1() {
   return count;
 }
 
+function inside(grid: string[][], shape: string[], [x, y]: [number, number]) {
+  if (shape.includes(`${x},${y}`)) return false;
+  if (x === 0 || y === 0 || x === grid.length - 1 || y === grid[0].length - 1)
+    return false;
+
+  let intersections = 0;
+  let row = grid[x];
+  for (let i = y; i < row.length; i++) {
+    if ("SF|L".includes(row[i]) && shape.includes(`${x},${i}`)) {
+      intersections++;
+    }
+  }
+
+  return intersections % 2 === 1;
+}
+
+function part2() {
+  const grid = lines.map((line) => line.split(""));
+  const start = findStart(grid);
+
+  let pipes = [start.join(",")];
+  let [posOne, posTwo] = getAdjacentPipes(grid, start);
+
+  while (posOne !== posTwo) {
+    pipes.push(posOne.join(","));
+    pipes.push(posTwo.join(","));
+    posOne = nextCoord(grid, pipes, posOne);
+    posTwo = nextCoord(grid, pipes, posTwo);
+  }
+
+  let insideCount = 0;
+  for (let row = 0; row < lines.length; row++) {
+    for (let col = 0; col < lines[row].length; col++) {
+      if (inside(grid, pipes, [row, col])) {
+        insideCount++;
+      }
+    }
+  }
+
+  return insideCount;
+}
+
 console.log("Part 1:", part1());
-// console.log("Part 2:", part2());
+console.log("Part 2:", part2());
+
+// Tried: 69, 70, 72, 73, 1387, 1636, 8331
