@@ -83,10 +83,14 @@ function inside(grid: string[][], shape: string[], [x, y]: [number, number]) {
   let intersections = 0;
   let row = grid[x];
   for (let i = y; i < row.length; i++) {
+    // Check if we're going along the edge of the shape
+    if (row[i] === "F" && "7-".includes(row[i + 1])) continue;
+    if (row[i] === "L" && "|J".includes(row[i + 1])) continue;
     if ("SF|L".includes(row[i]) && shape.includes(`${x},${i}`)) {
       intersections++;
     }
   }
+  if (intersections % 2 === 1) console.log(x, y, intersections);
 
   return intersections % 2 === 1;
 }
@@ -107,6 +111,7 @@ function part2() {
 
   let insideCount = 0;
   for (let row = 0; row < lines.length; row++) {
+    console.log(row);
     for (let col = 0; col < lines[row].length; col++) {
       if (inside(grid, pipes, [row, col])) {
         insideCount++;
@@ -117,7 +122,7 @@ function part2() {
   return insideCount;
 }
 
-console.log("Part 1:", part1());
+// console.log("Part 1:", part1());
 console.log("Part 2:", part2());
 
-// Tried: 69, 70, 72, 73, 1387, 1636, 8331
+// Tried: 69, 70, 72, 73, 1387, 1636, 1641, 1642, 8331
