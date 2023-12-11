@@ -3,7 +3,6 @@ const file = Bun.file(path);
 
 const data = await file.text();
 const lines = data.split("\n");
-
 const spaceGrid = lines.map((line) => line.split(""));
 
 function findEmptySpace(grid: string[][]) {
@@ -22,26 +21,6 @@ function findEmptySpace(grid: string[][]) {
   return [emptyRows, emptyCols];
 }
 
-function expandSpace(grid: string[][], factor = 1) {
-  const [emptyRows, emptyCols] = findEmptySpace(grid);
-
-  let newGrid = [];
-  for (let i = 0; i < grid.length; i++) {
-    if (emptyRows.includes(i)) {
-      newGrid.push(new Array(grid[0].length).fill("."));
-    }
-    newGrid.push([...grid[i]]);
-  }
-
-  for (let i = 0; i < newGrid.length; i++) {
-    for (let j = 0; j < emptyCols.length; j++) {
-      newGrid[i].splice(emptyCols[j] + j, 0, ".");
-    }
-  }
-
-  return newGrid;
-}
-
 function galaxyLocations(grid: string[][]) {
   let locations: [number, number][] = [];
   for (let i = 0; i < grid.length; i++) {
@@ -54,59 +33,45 @@ function galaxyLocations(grid: string[][]) {
   return locations;
 }
 
-function shortestPath(start: [number, number], end: [number, number]) {
+function countWithin(values: number[], start: number, end: number) {
+  return values.reduce((acc, cur) => {
+    if ((cur >= start && cur <= end) || (cur <= start && cur >= end)) {
+      return acc + 1;
+    }
+    return acc;
+  }, 0);
+}
+
+function shortestPath(
+  start: [number, number],
+  end: [number, number],
+  jumpsX: number[],
+  jumpsY: number[],
+  factor = 2
+) {
   const [startX, startY] = start;
   const [endX, endY] = end;
 
-  const xDiff = Math.abs(startX - endX);
-  const yDiff = Math.abs(startY - endY);
+  const xJumpCount = countWithin(jumpsX, startX, endX);
+  const yJumpCount = countWithin(jumpsY, startY, endY);
+
+  const xDiff = Math.abs(startX - endX) + xJumpCount * (factor - 1);
+  const yDiff = Math.abs(startY - endY) + yJumpCount * (factor - 1);
 
   return xDiff + yDiff;
 }
 
 function part1() {
-  const expandedGrid = expandSpace(spaceGrid);
-  const locations = galaxyLocations(expandedGrid);
+  const [emptyRows, emptyCols] = findEmptySpace(spaceGrid);
+  const locations = galaxyLocations(spaceGrid);
 
   return locations.reduce((acc, cur, i) => {
     let locationSum = 0;
     for (let j = i; j < locations.length; j++) {
-      locationSum += shortestPath(cur, locations[j]);
+      locationSum += shortestPath(cur, locations[j], emptyRows, emptyCols);
     }
     return acc + locationSum;
   }, 0);
-}
-
-// Could replace part1 to use this instead of `expandSpace` as done in part2
-// but seems nice to leave it in to show initial thoughts
-function shortestPathWithJumps(
-  start: [number, number],
-  end: [number, number],
-  jumpsX: number[],
-  jumpsY: number[],
-  factor = 1
-) {
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-
-  const xJumpCount = jumpsX.reduce((acc, cur) => {
-    if ((cur > startX && cur < endX) || (cur > endX && cur < startX)) {
-      return acc + 1;
-    }
-    return acc;
-  }, 0);
-
-  const yJumpCount = jumpsY.reduce((acc, cur) => {
-    if ((cur > startY && cur < endY) || (cur > endY && cur < startY)) {
-      return acc + 1;
-    }
-    return acc;
-  }, 0);
-
-  const xDiff = Math.abs(startX - endX) + xJumpCount * factor;
-  const yDiff = Math.abs(startY - endY) + yJumpCount * factor;
-
-  return xDiff + yDiff;
 }
 
 function part2() {
@@ -116,12 +81,12 @@ function part2() {
   return locations.reduce((acc, cur, i) => {
     let locationSum = 0;
     for (let j = i; j < locations.length; j++) {
-      locationSum += shortestPathWithJumps(
+      locationSum += shortestPath(
         cur,
         locations[j],
         emptyRows,
         emptyCols,
-        999999
+        100000
       );
     }
     return acc + locationSum;
