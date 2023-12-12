@@ -21,21 +21,25 @@ function getAdjacentPipes(grid: string[][], [x, y]: [number, number]) {
   let adjacentPipes: [number, number][] = [];
   // Certain pipes can only connect to certain other pipes i.e. down pipes to up pipes and left pipes to right pipes
   if (
+    x > 0 &&
     ["S", "J", "|", "L"].includes(currentPipe) &&
     ["7", "|", "F"].includes(grid[x - 1][y])
   )
     adjacentPipes.push([x - 1, y]);
   if (
+    x < grid.length - 1 &&
     ["S", "7", "|", "F"].includes(currentPipe) &&
     ["J", "|", "L"].includes(grid[x + 1][y])
   )
     adjacentPipes.push([x + 1, y]);
   if (
+    y > 0 &&
     ["S", "J", "-", "7"].includes(currentPipe) &&
     ["L", "-", "F"].includes(grid[x][y - 1])
   )
     adjacentPipes.push([x, y - 1]);
   if (
+    y < grid[x].length - 1 &&
     ["S", "L", "-", "F"].includes(currentPipe) &&
     ["J", "-", "7"].includes(grid[x][y + 1])
   )
@@ -77,16 +81,12 @@ function part1() {
 
 function inside(grid: string[][], shape: string[], [x, y]: [number, number]) {
   if (shape.includes(`${x},${y}`)) return false;
-  if (x === 0 || y === 0 || x === grid.length - 1 || y === grid[0].length - 1)
-    return false;
 
-  let intersections = 0;
   let row = grid[x];
-  for (let i = y; i < row.length; i++) {
+  let intersections = 0;
+  for (let i = y; i < row.length - y; i++) {
     // Check if we're going along the edge of the shape
-    if (row[i] === "F" && "7-".includes(row[i + 1])) continue;
-    if (row[i] === "L" && "|J".includes(row[i + 1])) continue;
-    if ("SF|L".includes(row[i]) && shape.includes(`${x},${i}`)) {
+    if ("L|J".includes(row[i]) && shape.includes(`${x},${i}`)) {
       intersections++;
     }
   }
@@ -98,6 +98,7 @@ function inside(grid: string[][], shape: string[], [x, y]: [number, number]) {
 function part2() {
   const grid = lines.map((line) => line.split(""));
   const start = findStart(grid);
+  grid[start[0]][start[1]] = "J";
 
   let pipes = [start.join(",")];
   let [posOne, posTwo] = getAdjacentPipes(grid, start);
@@ -113,9 +114,7 @@ function part2() {
   for (let row = 0; row < lines.length; row++) {
     console.log(row);
     for (let col = 0; col < lines[row].length; col++) {
-      if (inside(grid, pipes, [row, col])) {
-        insideCount++;
-      }
+      if (inside(grid, pipes, [row, col])) insideCount++;
     }
   }
 
