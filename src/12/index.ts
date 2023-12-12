@@ -4,9 +4,25 @@ const file = Bun.file(path);
 const data = await file.text();
 const lines = data.split("\n");
 
+export function memoize<Args extends unknown[], Result>(
+  func: (...args: Args) => Result
+): (...args: Args) => Result {
+  const stored = new Map<string, Result>();
+
+  return (...args) => {
+    const k = JSON.stringify(args);
+    if (stored.has(k)) {
+      return stored.get(k)!;
+    }
+    const result = func(...args);
+    stored.set(k, result);
+    return result;
+  };
+}
+
 const sum = (arr: number[]) => arr.reduce((acc, cur) => acc + cur, 0);
 
-function arrangements(springs: string, counts: number[]): number {
+const arrangements = memoize((springs: string, counts: number[]): number => {
   if (springs.length === 0) {
     if (counts.length === 0) {
       return 1;
@@ -43,7 +59,7 @@ function arrangements(springs: string, counts: number[]): number {
     arrangements("#" + springs.slice(1), counts) +
     arrangements("." + springs.slice(1), counts)
   );
-}
+});
 
 function part1() {
   return lines.reduce((acc, cur) => {
@@ -54,5 +70,17 @@ function part1() {
   }, 0);
 }
 
+function part2() {
+  return lines.reduce((acc, cur) => {
+    const [s, cs] = cur.split(" ");
+    const c = cs.split(",").map(Number);
+
+    const springs = [s, s, s, s, s].join("?");
+    const counts = [c, c, c, c, c].flat(1);
+
+    return acc + arrangements(springs, counts);
+  }, 0);
+}
+
 console.log(part1());
-// console.log(part2());
+console.log(part2());
