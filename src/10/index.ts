@@ -1,8 +1,19 @@
+import { logMatrix } from "../utils";
+
 const path = "src/10/data.txt";
 const file = Bun.file(path);
 
 const data = await file.text();
-const lines = data.split("\n");
+// const lines = data.split("\n");
+const lines = `...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`.split("\n");
 
 function findStart(grid: string[][]): [number, number] {
   for (let i = 0; i < lines.length; i++) {
@@ -79,26 +90,10 @@ function part1() {
   return count;
 }
 
-function inside(grid: string[][], shape: string[], [x, y]: [number, number]) {
-  if (shape.includes(`${x},${y}`)) return false;
-
-  let row = grid[x];
-  let intersections = 0;
-  for (let i = y; i < row.length - y; i++) {
-    // Check if we're going along the edge of the shape
-    if ("L|J".includes(row[i]) && shape.includes(`${x},${i}`)) {
-      intersections++;
-    }
-  }
-  if (intersections % 2 === 1) console.log(x, y, intersections);
-
-  return intersections % 2 === 1;
-}
-
 function part2() {
   const grid = lines.map((line) => line.split(""));
   const start = findStart(grid);
-  grid[start[0]][start[1]] = "J";
+  grid[start[0]][start[1]] = "F";
 
   let pipes = [start.join(",")];
   let [posOne, posTwo] = getAdjacentPipes(grid, start);
@@ -110,15 +105,35 @@ function part2() {
     posTwo = nextCoord(grid, pipes, posTwo);
   }
 
-  let insideCount = 0;
-  for (let row = 0; row < lines.length; row++) {
-    console.log(row);
-    for (let col = 0; col < lines[row].length; col++) {
-      if (inside(grid, pipes, [row, col])) insideCount++;
+  const pipeMap = grid.map((row, i) => {
+    return row.map((pipe, j) => (pipes.includes(`${i},${j}`) ? pipe : "."));
+  });
+
+  logMatrix(pipeMap);
+
+  const outside = new Set<string>();
+
+  for (let row = 0; row < pipeMap.length; row++) {
+    let within = false;
+    let up = false;
+    for (let col = 0; col < pipeMap[row].length; col++) {
+      let pipe = pipeMap[row][col];
+      if (pipe === "|") within = !within;
+      if ("LF".includes(pipe)) up = pipe === "L";
+      if ("7J".includes(pipe)) {
+        if (pipe !== (up ? "J" : "7")) {
+          within = !within;
+        }
+        up = false;
+      }
+      if (pipe === "." || pipe === "-") continue;
+      if (!within) outside.add(`${row},${col}`);
     }
   }
 
-  return insideCount;
+  console.log(outside);
+
+  return pipeMap.length * pipeMap[0].length - (outside.size + pipes.length);
 }
 
 // console.log("Part 1:", part1());
