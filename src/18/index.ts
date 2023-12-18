@@ -11,7 +11,6 @@ type Line = `${Direction} ${number} (#${string})`;
 type Instruction = {
   direction: Direction;
   distance: number;
-  colour: string;
 };
 
 function getInstructions(lines: Line[]): Instruction[] {
@@ -32,9 +31,8 @@ const move = {
   R: [0, 1],
 } as const;
 
-function part1() {
-  const instructions = getInstructions(lines);
-  const points = [[0, 0]];
+function draw(instructions: Instruction[]) {
+  const points: [number, number][] = [[0, 0]];
 
   let boundaries = 0;
 
@@ -45,10 +43,14 @@ function part1() {
     boundaries += distance;
   }
 
-  // Use shoelace formula to calculate the area of the polygon
-  // https://en.wikipedia.org/wiki/Shoelace_formula
-  // The problem with shoelace is that it treats points in the polygon as
-  // if they we're at the middle of a square, this is why we use Pick's later
+  return { points, boundaries };
+}
+
+// Use shoelace formula to calculate the area of the polygon
+// https://en.wikipedia.org/wiki/Shoelace_formula
+// The problem with shoelace is that it treats points in the polygon as
+// if they we're at the middle of a square, this is why we use Pick's later
+function calculateArea(points: [number, number][]) {
   let area = 0;
   for (let i = 0; i < points.length - 1; i++) {
     // Values need to wrap around hence the modulo
@@ -57,7 +59,13 @@ function part1() {
       (points[(i - 1 + points.length) % points.length][1] -
         points[(i + 1) % points.length][1]);
   }
-  area = Math.abs(area) / 2;
+  return Math.abs(area) / 2;
+}
+
+function part1() {
+  const instructions = getInstructions(lines);
+  const { points, boundaries } = draw(instructions);
+  const area = calculateArea(points);
 
   // Use Pick's theorem to calculate the interior points
   // https://en.wikipedia.org/wiki/Pick%27s_theorem
@@ -66,5 +74,29 @@ function part1() {
   return interior + boundaries;
 }
 
+const direction = ["R", "D", "L", "U"] as const;
+
+function getWrongInstructions(lines: Line[]) {
+  return lines.map((line) => {
+    const [, colour] = line.split(/[()]/);
+    const hex = parseInt(colour.slice(1, -1), 16);
+    const dir = parseInt(colour.slice(-1));
+    return {
+      direction: direction[dir],
+      distance: hex,
+    };
+  });
+}
+
+function part2() {
+  const instructions = getWrongInstructions(lines);
+
+  const { points, boundaries } = draw(instructions);
+  const area = calculateArea(points);
+  const interior = area - boundaries / 2 + 1;
+
+  return interior + boundaries;
+}
+
 console.log(part1());
-// console.log(part2());
+console.log(part2());
