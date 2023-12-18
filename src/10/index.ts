@@ -15,10 +15,18 @@ function findStart(lines: string[][]): [number, number] {
   return [-1, -1];
 }
 
-function part1() {
-  const [sr, sc] = findStart(grid);
+function intersection(...arrays: any[][]) {
+  return arrays.reduce((a, b) => a.filter((c) => b.includes(c)));
+}
+
+// Takes grid and starting row and column
+function getPipeLocations(
+  grid: string[][],
+  [sr, sc]: [number, number]
+): { pipes: Set<string>; s: string } {
   const seen = new Set<string>([`${sr}:${sc}`]);
   const queue = [[sr, sc]];
+  const maybeS = [];
 
   while (queue.length) {
     const [r, c] = queue.shift()!;
@@ -30,6 +38,7 @@ function part1() {
       if (!seen.has(key)) {
         seen.add(key);
         queue.push([r - 1, c]);
+        if (pipe === "S") maybeS.push(["|", "J", "L"]);
       }
     }
 
@@ -43,6 +52,7 @@ function part1() {
       if (!seen.has(key)) {
         seen.add(key);
         queue.push([r + 1, c]);
+        if (pipe === "S") maybeS.push(["|", "7", "F"]);
       }
     }
 
@@ -52,6 +62,7 @@ function part1() {
       if (!seen.has(key)) {
         seen.add(key);
         queue.push([r, c - 1]);
+        if (pipe === "S") maybeS.push(["-", "J", "7"]);
       }
     }
 
@@ -65,11 +76,56 @@ function part1() {
       if (!seen.has(key)) {
         seen.add(key);
         queue.push([r, c + 1]);
+        if (pipe === "S") maybeS.push(["-", "L", "F"]);
       }
     }
   }
 
-  return seen.size / 2;
+  const [s] = intersection(...maybeS);
+  return { pipes: seen, s };
+}
+
+function part1() {
+  const [sr, sc] = findStart(grid);
+  const { pipes } = getPipeLocations(grid, [sr, sc]);
+
+  return pipes.size / 2;
+}
+
+function part2() {
+  const gridCopy = [...grid];
+  const [sr, sc] = findStart(gridCopy);
+  const { pipes, s } = getPipeLocations(gridCopy, [sr, sc]);
+  gridCopy[sr][sc] = s;
+
+  const simpleGrid = gridCopy.map((row, r) =>
+    row.map((pipe, c) => (pipes.has(`${r}:${c}`) ? pipe : "."))
+  );
+
+  const outside = new Set<string>();
+
+  for (let r = 0; r < simpleGrid.length; r++) {
+    let within = false;
+    let up = false;
+    for (let c = 0; c < simpleGrid[r].length; c++) {
+      const pipe = simpleGrid[r][c];
+      if (pipe === "|") within = !within;
+      if (pipe === "L" || pipe === "F") up = pipe === "L";
+      if (pipe === "7" || pipe === "J") {
+        const exitPipe = up ? "J" : "7";
+        if (pipe !== exitPipe) {
+          within = !within;
+        }
+        up = false;
+      }
+      if (!within) outside.add(`${r}:${c}`);
+    }
+  }
+
+  const combined = new Set([...outside, ...pipes]);
+
+  return grid.length * grid[0].length - combined.size;
 }
 
 console.log(part1());
+console.log(part2());
